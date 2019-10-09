@@ -1,0 +1,72 @@
+lenovo@lenovo-Lenovo-G450:~$ mkdir flume1
+lenovo@lenovo-Lenovo-G450:~$ pwd
+/home/lenovo
+lenovo@lenovo-Lenovo-G450:~$ cd flume1
+lenovo@lenovo-Lenovo-G450:~/flume1$ mkdir conf
+lenovo@lenovo-Lenovo-G450:~/flume1$ cd conf
+lenovo@lenovo-Lenovo-G450:~/flume1/conf$ gedit agent1.conf
+
+--------------------------------------------------------------------------------------------
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1
+a1.channels = c1
+
+# Describe/configure source1
+a1.sources.src1.type = netcat
+a1.sources.src1.bind = localhost
+a1.sources.src1.port = 44444
+
+
+# Describe sink
+a1.sinks.s1.type = logger
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1
+a1.sinks.s1.channel = c1
+--------------------------------------------------------------------------------------------------
+now submitting
+
+lenovo@lenovo-Lenovo-G450:~$ flume-ng agent --name a1 \
+ --conf /home/lenovo/flume1/conf \
+ --conf-file /home/lenovo/flume1/conf/agent1.conf
+
+
+it will start source,channel and sink
+it will also start server socket with port no 44444 
+
+now open one more terminal and type
+
+lenovo@lenovo-Lenovo-G450:~/flume1/conf$ telnet localhost 44444   
+Trying 127.0.0.1...
+Connected to localhost.
+Escape character is '^]'.
+hello world
+OK
+hi..how r u?
+OK
+
+hello world and hi....how r u are captured immediately and u can see it in the seerversocket port
+
+17/09/06 12:40:35 INFO source.NetcatSource: Created serverSocket:sun.nio.ch.ServerSocketChannelImpl[/127.0.0.1:44444]
+17/09/06 12:42:24 INFO sink.LoggerSink: Event: { headers:{} body: 68 65 6C 6C 6F 20 77 6F 72 6C 64 0D             hello world. }
+17/09/06 12:42:46 INFO sink.LoggerSink: Event: { headers:{} body: 68 69 2E 2E 68 6F 77 20 72 20 75 3F 0D          hi..how r u?. }
+
+
+keeps on streaming---->so to kill it---->ctrl+c
+
+
+
+
+
+
+
+
+

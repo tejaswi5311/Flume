@@ -1,0 +1,83 @@
+if channel failed or channel system down, 
+ data will be missed.  to provide fault tolerence for channel use following flow.
+
+here 2 channels and 2 sinks writing into 2 different hdfs directories
+
+lenovo@lenovo-Lenovo-G450:~$ cd flume1
+lenovo@lenovo-Lenovo-G450:~/flume1$ cd conf
+lenovo@lenovo-Lenovo-G450:~/flume1/conf$ gedit agent4.conf
+
+conf/agent4.conf
+___________________
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1 s2 
+a1.channels = c1 c2
+
+# Describe/configure source1
+a1.sources.src1.type = exec
+a1.sources.src1.shell = /bin/bash -c
+a1.sources.src1.command=cat file1
+
+
+# Describe sink
+a1.sinks.s1.type = hdfs
+a1.sinks.s1.hdfs.fileType=DataStream
+a1.sinks.s1.hdfs.writeFormat=Text
+a1.sinks.s1.hdfs.path=hdfs://localhost:9000/flumelab2
+
+
+
+a1.sinks.s2.type = hdfs
+a1.sinks.s2.hdfs.fileType=DataStream
+a1.sinks.s2.hdfs.writeFormat=Text
+a1.sinks.s2.hdfs.path=hdfs://localhost:9000/flumelab3
+   
+
+#here we can write into same hdfs directory also
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1200
+a1.channels.c1.transactionCapacity = 100
+
+a1.channels.c2.type = memory
+a1.channels.c2.capacity = 1200
+a1.channels.c2.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1 c2
+a1.sinks.s1.channel = c1
+a1.sinks.s2.channel = c2
+-------------------------------------------------------------------------------------------------------
+now submitting
+
+$ flume-ng agent --name a1 \
+> --conf /home/lenovo/flume1/conf \
+> --conf-file /home/lenovo/flume1/conf/agent4.conf
+
+
+hadoop fs -ls /flumelab1
+Found 25 items
+-rw-r--r--   1 lenovo supergroup        216 2017-09-07 13:01 /flumelab1/FlumeData.1504769438944
+-rw-r--r--   1 lenovo supergroup         64 2017-09-07 13:22 /flumelab1/abc.1504770712122
+-rw-r--r--   1 lenovo supergroup         64 2017-09-07 13:40 /flumelab1/abc.1504771792489
+-rw-r--r--   1 lenovo supergroup         64 2017-09-07 13:44 /flumelab1/bbb.1504772028954txt
+-rw-r--r--   1 lenovo supergroup         64 2017-09-07 14:16 /flumelab1/ccc.1504773964050
+
+hadoop fs -ls /flumelab2
+Found 17 items
+-rw-r--r--   1 lenovo supergroup        216 2017-09-06 16:41 /flumelab2/FlumeData.1504696229498
+-rw-r--r--   1 lenovo supergroup         64 2017-09-07 14:16 /flumelab2/ccc.1504773964055
+-rw-r--r--   1 lenovo supergroup         40 2017-03-08 14:33 /flumelab2/dept
+
+from above flow, src1 is writing into c1 and c2 channels,
+  if one channel fails, still data available in another.
+but if no failure happend data will be duplicated in target hadoop directory.
+so before processing data, we need eliminated duplicate records.
+
+
+

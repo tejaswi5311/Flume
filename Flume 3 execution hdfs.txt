@@ -1,0 +1,64 @@
+#writing into hdfs
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1
+a1.channels = c1
+
+# Describe/configure source1
+a1.sources.src1.type = exec
+a1.sources.src1.shell = /bin/bash -c      # if linux commands not requireed then just /bin -c is enough
+a1.sources.src1.command=cat file1     #any valid linux or java command like ---->java sample.java
+
+
+# Describe sink
+a1.sinks.s1.type = hdfs
+a1.sinks.s1.hdfs.path=hdfs://localhost:9000/flumelab1
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1
+a1.sinks.s1.channel = c1
+--------------------------------------------------------------------
+now submitting
+
+$ flume-ng agent --name a1 \
+--conf /home/lenovo/flume1/conf \
+--conf-file /home/lenovo/flume1/conf/agent2.conf
+
+Note: dont submit from flume1/conf directory
+          submit seperately from terminal
+
+it will start source,channel and sink  and sink writes into HDFS
+
+
+7/09/06 15:01:47 INFO hdfs.BucketWriter: Creating hdfs://localhost:9000/hadooplab/FlumeData.1504690307572.tmp
+17/09/06 15:02:17 INFO hdfs.BucketWriter: Closing hdfs://localhost:9000/hadooplab/FlumeData.1504690307572.tmp
+17/09/06 15:02:17 INFO hdfs.BucketWriter: Renaming hdfs://localhost:9000/hadooplab/FlumeData.1504690307572.tmp to hdfs://localhost:9000/hadooplab/FlumeData.1504690307572
+17/09/06 15:02:17 INFO hdfs.HDFSEventSink: Writer callback called.
+
+
+check in HDFS:
+
+$ hadoop fs -ls /hadooplab
+Found 7 items
+-rw-r--r--   1 lenovo supergroup        216 2017-09-06 14:57 /hadooplab/FlumeData.1504690037809
+drwxr-xr-x   - lenovo supergroup          0 2017-05-31 23:10 /hadooplab/hlab1
+-rw-r--r--   1 lenovo supergroup         77 2017-07-31 15:33 /hadooplab/marks
+-rw-r--r--   1 lenovo supergroup          7 2017-08-16 16:25 /hadooplab/mysqlpassword
+-rw-r--r--   1 lenovo supergroup         34 2017-05-31 22:45 /hadooplab/sample1.txt
+-rw-r--r--   1 lenovo supergroup         65 2017-06-02 11:10 /hadooplab/sample2.txt.gz
+-rw-r--r--   1 lenovo supergroup         27 2017-07-31 15:49 /hadooplab/tab1
+lenovo@lenovo-Lenovo-G450:~$ hadoop fs -cat /hadooplab/FlumeData.1504690037809
+SEQ!org.apache.hadoop.io.LongWritable"org.apache.hadoop.io.BytesWritable�
+a�Z�]!�(.�^V���Good morning.........^V���Good morning........^V���Good morning........lenovo@lenovo-Lenovo-G450:~$ 
+
+Note: By default sink writes data into hadoop in sequence format i.e binary format(compressed format)
+
+

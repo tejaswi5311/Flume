@@ -1,0 +1,236 @@
+
+
+conf/agent1.conf
+______________________
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1
+a1.channels = c1
+
+# Describe/configure source1
+a1.sources.src1.type = exec
+a1.sources.src1.shell = /bin/bash -c
+a1.sources.src1.command=cat f1
+
+
+# Describe sink
+a1.sinks.s1.type = hdfs
+a1.sinks.s1.hdfs.path=hdfs://quickstart.cloudera/user/cloudera/myFlume
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1200
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1
+a1.sinks.s1.channel = c1
+
+############################################
+submit above flow using following command
+
+[cloudera@quickstart ~]$ hadoop fs -mkdir myFlume
+
+[cloudera@quickstart ~]$ flume-ng agent --conf conf --conf-file conf/agent1.conf --name a1 -Dflume.root.logger=INFO,console
+
+[cloudera@quickstart ~]$ hadoop fs -ls myFlume
+
+note: By default sink will write in  sequence format
+
+The Risk in above flow is, if channel failed or channel system down, 
+ data will be missed.  to provide fault tolerence for channel use following flow.
+
+***********************om aim hreem sreem***********************************
+
+sreeram hadoop notes:
+sreeram flume notes for practice:
+
+conf/agent2.conf
+___________________
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1 s2 
+a1.channels = c1 c2
+
+# Describe/configure source1
+a1.sources.src1.type = exec
+a1.sources.src1.shell = /bin/bash -c
+a1.sources.src1.command=cat f1
+
+
+# Describe sink
+a1.sinks.s1.type = hdfs
+a1.sinks.s1.hdfs.path=hdfs://quickstart.cloudera/user/cloudera/urFlume
+
+a1.sinks.s2.type = hdfs
+a1.sinks.s2.hdfs.path=hdfs://quickstart.cloudera/user/cloudera/urFlume
+
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1200
+a1.channels.c1.transactionCapacity = 100
+
+a1.channels.c2.type = memory
+a1.channels.c2.capacity = 1200
+a1.channels.c2.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1 c2
+a1.sinks.s1.channel = c1
+a1.sinks.s2.channel = c2
+
+##################################
+
+[cloudera@quickstart ~]$ hadoop fs -mkdir urFlume
+[cloudera@quickstart ~]$ flume-ng agent --conf conf --conf-file conf/agent2.conf --name a1 -Dflume.root.logger=INFO,console
+
+[cloudera@quickstart ~]$ hadoop fs -ls urFlume
+
+from above flow, src1 is writing into c1 and c2 channels,
+  if one channel fails, still data available in another.
+but if no failure happend data will be duplicated in target hadoop directory.
+so before processing data, we need eliminated duplicate records.
+
+******************om aim hreem sreem**********************************
+
+sreeram hadoop notes:
+sreeram flume notes for practice:
+Task --> importing from Hive Table
+
+conf/agent3.conf
+______________________________
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1
+a1.channels = c1
+
+# Describe/configure source1
+a1.sources.src1.type = exec
+a1.sources.src1.shell = /bin/bash -c
+a1.sources.src1.command=hive -e 'select * from mraw'
+
+
+# Describe sin
+a1.sinks.s1.type = hdfs
+a1.sinks.s1.hdfs.path=hdfs://quickstart.cloudera/user/cloudera/ourFlume
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1200
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1
+a1.sinks.s1.channel = c1
+
+#############################################
+
+[cloudera@quickstart ~]$ hive
+hive> create table mraw(line string);
+OK
+Time taken: 2.218 seconds
+hive> load data local inpath 'f1' into table mraw;
+hive> select * from mraw limit 5;
+OK
+aaaaaaaaaaaaaaaaaaaaaaaa
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+cccccccccccccccccccccccccccccc
+ddddddddddddddddddddddddddd
+Time taken: 0.341 seconds, Fetched: 5 row(s)
+hive> 
+
+[cloudera@quickstart ~]$ hadoop fs -mkdir ourFlume
+
+[cloudera@quickstart ~]$ flume-ng agent --conf conf --conf-file conf/agent3.conf --name a1 -Dflume.root.logger=INFO,console
+
+[cloudera@quickstart ~]$ hadoop fs -ls ourFlume
+
+in all above cases , output will be in sequence file format.
+
+*****************************om aim hreem sreem ***************************
+
+sreeram hadoop notes:
+sreeram flume notes for practice:
+
+conf/agent4.conf
+________________________________
+
+
+
+
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1
+a1.channels = c1
+
+# Describe/configure source1
+a1.sources.src1.type = exec
+a1.sources.src1.shell = /bin/bash -c
+a1.sources.src1.command=cat f1
+
+
+# Describe sin
+a1.sinks.s1.type = hdfs
+a1.sinks.s1.hdfs.fileType=DataStream
+a1.sinks.s1.hdfs.writeFormat=Text
+a1.sinks.s1.hdfs.path=hdfs://quickstart.cloudera/user/cloudera/naFlume
+
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1200
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1
+a1.sinks.s1.channel = c1
+
+######################################
+
+ above flow will write output in Text Format.
+
+[cloudera@quickstart ~]$ hadoop fs -mkdir naFlume
+
+[cloudera@quickstart ~]$ flume-ng agent --conf conf --conf-file conf/agent4.conf --name a1 -Dflume.root.logger=INFO,console
+
+[cloudera@quickstart ~]$ hadoop fs -ls naFlume
+
+[cloudera@quickstart ~]$ hadoop fs -cat naFlume/FlumeData.1471351131067
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+cccccccccccccccccccccccccccccc
+ddddddddddddddddddddddddddd
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+ddddddddddddddddddddddddddddd
+ccccccccccccccccccccccccccccccc
+cccccccccccccccccccccccccccccc
+ccccccccccccccccccccccccccccccc
+
+above output is in Text Format.
+
+*******************om aim hreem  sreem*****************************
+
+
+
+
+
+
+
+
+
+
+
+
+
+Posted by SreeRam Hadoop Notes at 04:51 

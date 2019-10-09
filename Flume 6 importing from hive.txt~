@@ -1,0 +1,68 @@
+importing from Hive Table
+
+
+lenovo@lenovo-Lenovo-G450:~$ cd flume1
+lenovo@lenovo-Lenovo-G450:~/flume1$ cd conf
+lenovo@lenovo-Lenovo-G450:~/flume1/conf$ gedit agent5.conf
+
+
+conf/agent5.conf
+______________________________
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1
+a1.channels = c1
+
+# Describe/configure source1
+a1.sources.src1.type = exec
+a1.sources.src1.shell = /bin/bash -c
+a1.sources.src1.command=hive -e 'select * from sample1'
+
+
+# Describe sink
+a1.sinks.s1.type = hdfs
+a1.sinks.s1.hdfs.fileType=DataStream
+a1.sinks.s1.hdfs.writeFormat=Text
+a1.sinks.s1.hdfs.path=hdfs://localhost:9000/flumelab3
+a1.sinks.s1.hdfs.filePrefix=yyy
+
+
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1200
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1
+a1.sinks.s1.channel = c1
+-----------------------------------------------------------------------------------------------------------------
+hive> create table sample1(line string);
+OK
+Time taken: 2.96 seconds
+hive> load data local inpath 'file1' into table sample1;
+
+hive> select * from sample1;
+OK
+Good morning.........
+Good morning........
+Good morning........
+Time taken: 2.599 seconds, Fetched: 3 row(s)
+-------------------------------------------------------------------------------------------------------------------
+
+now submitting
+
+flume-ng agent --name a1 \
+> --conf /home/lenovo/flume1/conf \
+> --conf-file /home/lenovo/flume1/conf/agent5.conf
+
+output:
+
+hadoop fs -cat /flumelab3/yyy.1504775919333
+Good morning.........
+Good morning........
+Good morning........
+
+

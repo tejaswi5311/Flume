@@ -1,0 +1,68 @@
+
+
+# example.conf: A single-node Flume configuration 
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1
+a1.channels = c1
+
+#a1->agent name,  src1-->source name ,c1--->channel name, s1--->sink name
+
+# Describe/configure source1  (source configuration)
+a1.sources.src1.type = netcat  (or) telnet  (or)exec  (or)log  #here source application is netcat,which generate events
+a1.sources.src1.bind = localhost               #hostname
+a1.sources.src1.port=  44444                   #server socket port no
+
+
+# Describe sink   (sink cofiguration)
+a1.sinks.s1.type = logger  (or) hdfs (or)JMS (or) kafka topics
+#a1.sinks.s1.hdfs.path=hdfs://quickstart.cloudera/user/cloudera/myFlume
+
+# Use a channel which buffers events in memory (channel configuration)
+a1.channels.c1.type = memory (or) file
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1   #linking src and channel so that src can write into channel or channels
+a1.sinks.s1.channel = c1        # linking sink and channel,so that channel can write into sink or sinks
+
+---------------------------------------------------------------------------------------------------------------------------------
+In the above config file
+
+1)source types  : netcat/telnet/ log/exec
+2)channel types : memory / file
+3)sink types    : hdfs/jms/logger/kafka topics
+
+
+1)source types:
+  i)netcat/telnet : console user typed streams
+  ii)log          : to stream events from log data of remote servers,the logs can be os logs,database logs,web logs
+  iii)exec        : to stream output of command line submissions of linux/unix
+     ex: hadoop file i want to stream then
+         source type=exec
+
+
+2)channel types:
+   i)memory: means buffering in RAM
+   ii)file : means bufering in DISK
+
+3)sink types :
+    i)Hdfs     :to write into hadoop(hdfs)directory , the directory should already be existed
+    ii)jms     :to write into non-hadoop applications
+    iii)logger :to write events into console
+     iv)kafka   :to write into kafka topics
+
+
+
+
+
+
+
+
+
+
+
+
+

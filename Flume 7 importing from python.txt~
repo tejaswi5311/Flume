@@ -1,0 +1,67 @@
+
+importing from python
+$gedit sample1.py
+
+print("Hyderabad........")
+print("welcome...........")
+
+lenovo@lenovo-Lenovo-G450:~$ python sample1.py
+Hyderabad........
+welcome...........
+#agent6.cong
+--------------------------------------------------------------------------
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1 s2 
+a1.channels = c1 c2
+
+# Describe/configure source1
+a1.sources.src1.type = exec
+a1.sources.src1.shell = /bin/bash -c
+a1.sources.src1.command=python sample1.py
+
+
+# Describe sink
+a1.sinks.s1.type = hdfs
+a1.sinks.s1.hdfs.fileType=DataStream
+a1.sinks.s1.hdfs.writeFormat=Text
+a1.sinks.s1.hdfs.path=hdfs://localhost:9000/flumelab1
+
+
+
+a1.sinks.s2.type = hdfs
+a1.sinks.s2.hdfs.fileType=DataStream
+a1.sinks.s2.hdfs.writeFormat=Text
+a1.sinks.s2.hdfs.path=hdfs://localhost:9000/flumelab1
+
+
+# Use a channel which buffers events in memory
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1200
+a1.channels.c1.transactionCapacity = 100
+
+a1.channels.c2.type = memory
+a1.channels.c2.capacity = 1200
+a1.channels.c2.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1 c2
+a1.sinks.s1.channel = c1
+a1.sinks.s2.channel = c2
+
+
+------------------------------------------------------------------------------------------
+submitting:
+flume-ng agent --name a1 \
+--conf /home/lenovo/flume1/conf \
+--conf-file /home/lenovo/flume1/conf/agent6.conf
+
+
+output:
+hadoop fs -cat /flumelab4/FlumeData.1504779851452
+Hyderabad........
+welcome...........
+
+

@@ -1,0 +1,39 @@
+#By default sink writes into hdfs in sequence format, but i want in text format then write the following 
+
+lenovo@lenovo-Lenovo-G450:~$ cd flume1
+lenovo@lenovo-Lenovo-G450:~/flume1$ cd conf
+lenovo@lenovo-Lenovo-G450:~/flume1/conf$ gedit agent3.conf
+
+----------------------------------------------------------------------------------------------------------------------
+# example.conf: A single-node Flume configuration
+
+# Name the components on this agent
+a1.sources = src1
+a1.sinks = s1
+a1.channels = c1
+
+# Describe/configure source1
+a1.sources.src1.type = exec
+a1.sources.src1.shell = /bin/bash -c
+a1.sources.src1.command=cat file1              
+
+
+# Describe sink
+a1.sinks.s1.type = hdfs
+a1.sinks.s1.hdfs.fileType=DataStream
+a1.sinks.s1.hdfs.writeFormat=Text
+a1.sinks.s1.hdfs.path=hdfs://localhost:9000/flumelab1
+a1.sinks.s1.hdfs.filePrefix=abc     #with name abc a file will be created in flumelab1 instead of FlumeData name
+a1.sinks.s1.hdfs.fileSuffix=txt       #at end of filename,we see txt
+
+
+# Use a channel which buffers events in memory  
+a1.channels.c1.type = memory
+a1.channels.c1.capacity = 1000
+a1.channels.c1.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+a1.sources.src1.channels = c1
+a1.sinks.s1.channel = c1
+
+-------------------------------------------------------------------------------------------------------------------------------------
